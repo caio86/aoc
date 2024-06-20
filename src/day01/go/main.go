@@ -124,7 +124,7 @@ func calculateP2(inputScanner *bufio.Scanner) (sum uint) {
 }
 
 func main() {
-	inputFile := "./input.txt"
+	inputFile := "../input.txt"
 	file1, _ := os.Open(inputFile)
 	defer file1.Close()
 

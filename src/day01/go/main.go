@@ -36,37 +36,94 @@ var numberMap = map[string]Numbers{
 	"nine":  Nine,
 }
 
-func parseStringNumberToRealNumber(inputString string) string {
-	var updatedString string = inputString
+func reverseString(input string) (result string) {
+	for _, value := range input {
+		result = string(value) + result
+	}
+
+	return
+}
+
+func parseStringNumberToRealNumber(inputString string) (result string, reversedResult string) {
+	result = inputString
+	reversedResult = inputString
 	var positions = make(map[int]string)
 
-	for key := range numberMap {
-		if strings.Contains(inputString, key) {
-			positions[strings.Index(inputString, key)] = key
+	for index := 0; index <= 1; index++ {
+		for key := range numberMap {
+			if strings.Contains(inputString, key) {
+				positions[strings.Index(inputString, key)] = key
+			}
+		}
+
+		positionKeys := make([]int, 0)
+		for keys := range positions {
+			positionKeys = append(positionKeys, keys)
+		}
+		if index == 0 {
+			sort.Ints(positionKeys)
+		} else {
+			sort.Sort(sort.Reverse(sort.IntSlice(positionKeys)))
+		}
+
+		for _, key := range positionKeys {
+			old := positions[key]
+			replaceWith := fmt.Sprint(numberMap[positions[key]])
+			if index == 0 {
+				result = strings.Replace(result, old, replaceWith, 1)
+			} else {
+				old = reverseString(old)
+				replaceWith = reverseString(replaceWith)
+				reversedResult = reverseString(reversedResult)
+				reversedResult = strings.Replace(reversedResult, old, replaceWith, 1)
+				reversedResult = reverseString(reversedResult)
+			}
 		}
 	}
 
-	positionKeys := make([]int, 0)
-	for keys := range positions {
-		positionKeys = append(positionKeys, keys)
-	}
-	sort.Ints(positionKeys)
-
-	for _, key := range positionKeys {
-		old := positions[key]
-		replaceWith := fmt.Sprint(numberMap[positions[key]])
-		updatedString = strings.Replace(updatedString, old, replaceWith, 1)
-	}
-
-	return updatedString
+	return
 }
 
-func getDigits(input string) string {
+func getDigitsPart1(input string) string {
 	var digits []rune
 
+	// First digit
 	for _, char := range input {
 		if unicode.IsDigit(char) {
 			digits = append(digits, char)
+			break
+		}
+	}
+
+	// Second digit
+	for _, char := range reverseString(input) {
+		if unicode.IsDigit(char) {
+			digits = append(digits, char)
+			break
+		}
+	}
+
+	return string(digits)
+}
+
+func getDigitsPart2(input string) string {
+	var digits []rune
+	// input = "oooneeone"
+
+	updatedInput, reversedInput := parseStringNumberToRealNumber(input)
+	// First digit
+	for _, char := range updatedInput {
+		if unicode.IsDigit(char) {
+			digits = append(digits, char)
+			break
+		}
+	}
+
+	// Second digit
+	for _, char := range reverseString(reversedInput) {
+		if unicode.IsDigit(char) {
+			digits = append(digits, char)
+			break
 		}
 	}
 
@@ -79,7 +136,7 @@ func calculateP1(inputScanner *bufio.Scanner) (sum uint) {
 	for inputScanner.Scan() {
 		input := inputScanner.Text()
 
-		digits := getDigits(input)
+		digits := getDigitsPart1(input)
 
 		firstAndLastDigit, _ := strconv.ParseUint(fmt.Sprintf("%c%c", digits[0], digits[len(digits)-1]), 10, 64)
 
@@ -93,27 +150,32 @@ func calculateP1(inputScanner *bufio.Scanner) (sum uint) {
 	return
 }
 
-func calculateP2(inputScanner *bufio.Scanner) (sum uint) {
-	var calibrationValues []uint
+func calculateP2(inputScanner *bufio.Scanner) (sum uint64) {
+	var calibrationValues []uint64
 
 	for inputScanner.Scan() {
 		input := inputScanner.Text()
 
 		fmt.Printf("\ninput: %s\n", input)
 
-		updatedInput := parseStringNumberToRealNumber(input)
-
-		fmt.Printf("updatedInput: %s\n", updatedInput)
-
-		digits := getDigits(updatedInput)
+		digits := getDigitsPart2(input)
 
 		fmt.Printf("digits: %v\n", digits)
 
-		firstAndLastDigit, _ := strconv.ParseUint(fmt.Sprintf("%c%c", digits[0], digits[len(digits)-1]), 10, 64)
+		firstDigit := digits[0]
+		secondDigit := digits[len(digits)-1]
+
+		var firstAndLastDigit uint64
+
+		if firstDigit != secondDigit {
+			firstAndLastDigit, _ = strconv.ParseUint(fmt.Sprintf("%c%c", digits[0], digits[len(digits)-1]), 10, 64)
+		} else {
+			firstAndLastDigit, _ = strconv.ParseUint(fmt.Sprintf("%c", digits[0]), 10, 64)
+		}
 
 		fmt.Printf("first and last: %d\n", firstAndLastDigit)
 
-		calibrationValues = append(calibrationValues, uint(firstAndLastDigit))
+		calibrationValues = append(calibrationValues, firstAndLastDigit)
 	}
 
 	for _, value := range calibrationValues {
@@ -139,6 +201,4 @@ func main() {
 
 	fmt.Printf("Part 1: %d\n", part1Result)
 	fmt.Printf("Part 2: %d\n", part2Result)
-	fmt.Printf("Test: %v\n", parseStringNumberToRealNumber("8kgplfhvtvqpfsblddnineoneighthg"))
-	// Should result 88
 }
